@@ -1,7 +1,9 @@
 import mongoose, { Error } from 'mongoose';
 
 const dbconn = async () => {
-  const { connection } = await mongoose.connect(process.env.DATABASE_URL);
+  const { connection } = await mongoose.connect(process.env.DATABASE_URL, {
+    connectTimeoutMS: 20000,
+  });
   try {
     if (connection.readyState === 1) {
       Promise.resolve(true);

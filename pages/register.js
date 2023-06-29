@@ -1,11 +1,15 @@
 import Registervalidate from '@/components/Register/Registervalidate';
 import { useFormik } from 'formik';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 const register = () => {
   const [show, setShow] = useState();
+  const [loading, isLoading] = useState(false);
+  const Router = useRouter();
+
   const router = useRouter();
   const formik = useFormik({
     initialValues: {
@@ -39,6 +43,36 @@ const register = () => {
   function DisplayErrorMessage(error) {
     const errormessage = document.getElementById('err');
     errormessage.textContent = error;
+  }
+  useEffect(() => {
+    const HandleChangeStart = () => {
+      isLoading(true);
+    };
+    const HandleChangeEnd = () => {
+      isLoading(false);
+    };
+
+    Router.events.on('routeChangeStart', HandleChangeStart);
+    Router.events.on('routeChangeComplete', HandleChangeEnd);
+
+    return () => {
+      Router.events.off('routeChangeStart', HandleChangeStart);
+      Router.events.off('routeChangeComplete', HandleChangeEnd);
+    };
+  });
+  if (loading === true) {
+    return (
+      <>
+        <div className="    flex justify-center items-center mt-36 mb-36">
+          <Image
+            src="/assets/spinner1.svg"
+            alt="spiner"
+            width={500}
+            height={500}
+          />
+        </div>
+      </>
+    );
   }
   return (
     <>

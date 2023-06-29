@@ -1,30 +1,45 @@
 import Users from '@/Database/BookUserSchema';
 import dbconn from '@/Database/dbconn';
 import { compare } from 'bcryptjs';
+import { Error } from 'mongoose';
 import NextAuth from 'next-auth/next';
 import Credentials from 'next-auth/providers/credentials';
+import GitHubProvider from 'next-auth/providers/github';
+import GoogleProvider from 'next-auth/providers/google';
 
 export default NextAuth({
   providers: [
+    GitHubProvider({
+      clientId: process.env.CLIENT_ID,
+      clientSecret: process.env.CLIENT_SECRET,
+    }),
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
+
     Credentials({
+      name: 'Credentials',
       async authorize(credentials, req) {
         dbconn().catch((error) => {
-          throw new Error(`connection failed: ${error.message}`);
+          error: 'connection failed';
         });
-        const userexists = Users.findOne({ email: credentials.email });
+        //  check if user exists
+        const userexists = await Users.findOne({ email: credentials.email });
+
         if (!userexists) {
-          throw new Error(
-            'Click the signUp link above you dont have an account'
-          );
+          throw new Error('User not found Kindly SignIn');
         }
-        const correctpassword = await compare(
+
+        //   comparing the password
+        const correctPassword = await compare(
           credentials.password,
           userexists.password
         );
-
-        if (!correctpassword || userexists.email !== credentials.email) {
-          throw new Error('Incorrect password');
+        if (!correctPassword || userexists.email !== credentials.email) {
+          throw new Error('Invalid email address or password');
         }
+
         return userexists;
       },
     }),

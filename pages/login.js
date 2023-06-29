@@ -1,12 +1,17 @@
 import Loginvalidate from '@/components/Login/Loginvalidate';
+import Loading from '@/components/loading';
 import { useFormik } from 'formik';
 import { signIn } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
-import React from 'react';
+import { useRouter } from 'next/router';
+import React, { useEffect, useState } from 'react';
 import { FaGooglePlusG, FaAccessibleIcon } from 'react-icons/fa';
 
 const login = () => {
+  const [loading, isLoading] = useState(false);
+  const Router = useRouter();
+
   const formik = useFormik({
     initialValues: {
       email: '',
@@ -22,15 +27,59 @@ const login = () => {
       password: values.password,
       callbackUrl: '/',
     });
-    if (!status.error === null) {
+    if (status.error !== null) {
       const ErrorMessage = status.error;
       DisplayError(ErrorMessage);
+    }
+    // checking if the user encoutered an error while logging in
+    if (status.ok) {
+      Router.push(status.url);
     }
   }
   function DisplayError(ErrorMessage) {
     const error = document.getElementById('error');
     error.textContent = ErrorMessage;
   }
+
+  const Github = async () => {
+    signIn('github', { callbackUrl: 'http://localhost:3000' });
+  };
+  const Google = async () => {
+    signIn('google', { callbackUrl: 'http://localhost:3000' });
+  };
+
+  useEffect(() => {
+    const HandleChangeStart = () => {
+      isLoading(true);
+    };
+    const HandleChangeEnd = () => {
+      isLoading(false);
+    };
+
+    Router.events.on('routeChangeStart', HandleChangeStart);
+    Router.events.on('routeChangeComplete', HandleChangeEnd);
+
+    return () => {
+      Router.events.off('routeChangeStart', HandleChangeStart);
+      Router.events.off('routeChangeComplete', HandleChangeEnd);
+    };
+  });
+
+  if (loading === true) {
+    return (
+      <>
+        <div className="    flex justify-center items-center mt-36 mb-36">
+          <Image
+            src="/assets/spinner1.svg"
+            alt="spiner"
+            width={500}
+            height={500}
+          />
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <div>
@@ -45,7 +94,7 @@ const login = () => {
         </div>
         <div
           id="error"
-          className="bg-red-800 text-slate-100 font-extrabold text-lg p-5"
+          className="text-red-900 text-center font-extrabold text-lg p-5"
         ></div>
         <div className="flex flex-col justify-center">
           <form
@@ -89,11 +138,17 @@ const login = () => {
             </div>
           </form>
           <div className=" flex flex-col justify-center items-center ">
-            <div className="font-bold flex items-center space-x-4 justify-center  text-2xl p-5 cursor-pointer ">
+            <div
+              className="font-bold flex items-center space-x-4 justify-center  text-2xl p-5 cursor-pointer "
+              onClick={Google}
+            >
               <h1>Sigin with Google </h1>{' '}
               <Image src="/assets/google.svg" width={27} height={27} />
             </div>
-            <div className="font-bold flex text-2xl cursor-pointer">
+            <div
+              className="font-bold flex text-2xl cursor-pointer"
+              onClick={Github}
+            >
               Signin with Github
               <Image src="/assets/github.svg" width={27} height={27} />
             </div>
